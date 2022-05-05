@@ -3,9 +3,12 @@ This is a simple MLP-base conditional GAN.
 Same as gan.py except that the conditional input is
 given to the discriminator.
 """
+from ast import Num
+from audioop import avg
+from dis import dis
 import numpy as np
+import matplotlib.pyplot as plt
 import os
-
 
 import tensorflow as tf
 from tensorflow.compat.v1 import logging
@@ -35,8 +38,8 @@ def generator_loss(fake_output):
 
 class CGAN():
     def __init__(self,
-        noise_dim: int = 4, gen_output_dim: int = 2,
-        cond_dim: int = 4, disable_tqdm=False, lr=0.0001):
+        noise_dim: int = 4, gen_output_dim: int = 1,
+        cond_dim: int = 6, disable_tqdm=False, lr=0.0001):
         """
         noise_dim: dimension of the noises
         gen_output_dim: output dimension
@@ -53,8 +56,20 @@ class CGAN():
         # ============
         # Optimizers
         # ============
-        self.generator_optimizer = keras.optimizers.Adam(lr)
-        self.discriminator_optimizer = keras.optimizers.Adam(lr)
+        end_lr = 1e-6
+        gen_lr = 0.0001
+        disc_lr = 0.0001
+        batch_size = args.batch_size
+        if args.num_input == "1m":
+            num_events = 1000000
+        else:
+            num_events = 100000 #100K
+        num_epochs = int(args.epochs*(num_events/batch_size))
+        gen_lr = keras.optimizers.schedules.PolynomialDecay(gen_lr, num_epochs, end_lr, power=4)
+        disc_lr = keras.optimizers.schedules.PolynomialDecay(disc_lr, num_epochs, end_lr, power=1.0)
+    
+        self.generator_optimizer = keras.optimizers.Adam(gen_lr) # lr)
+        self.discriminator_optimizer = keras.optimizers.Adam(disc_lr) # lr)
 
         # Build the critic
         self.discriminator = self.build_critic()
@@ -70,11 +85,11 @@ class CGAN():
 
         model = keras.Sequential([
             keras.Input(shape=(gen_input_dim,)),
-            layers.Dense(256),
+            layers.Dense(32), #256 originally
             layers.BatchNormalization(),
             layers.LeakyReLU(),
             
-            layers.Dense(256),
+            layers.Dense(32), #256 originally
             layers.BatchNormalization(),
             
             layers.Dense(self.gen_output_dim),
@@ -87,11 +102,11 @@ class CGAN():
 
         model = keras.Sequential([
             keras.Input(shape=(gen_output_dim,)),
-            layers.Dense(256),
+            layers.Dense(64), #256 originally
             layers.BatchNormalization(),
             layers.LeakyReLU(),
             
-            layers.Dense(256),
+            layers.Dense(64), #256 originally
             layers.BatchNormalization(),
             layers.LeakyReLU(),
 
@@ -100,7 +115,7 @@ class CGAN():
         return model
 
 
-    def train(self, train_truth, epochs, batch_size, test_truth, log_dir, evaluate_samples_fn,
+    def train(self, train_truth, epochs, batch_size, test_truth, log_dir, evaluate_samples_fn, xlabels, KE, num_input,
         train_in=None, test_in=None):
         # ======================================
         # construct testing data once for all
@@ -139,6 +154,7 @@ class CGAN():
                 # =============================================================    
                 # add the conditional inputs to generated and truth information
                 # =============================================================
+                # print(cond_in.shape, gen_out_4vec.shape, truth_4vec.shape)
                 gen_out_4vec = tf.concat([cond_in, gen_out_4vec], axis=-1)
                 truth_4vec = tf.concat([cond_in, truth_4vec], axis=-1)
 
@@ -160,13 +176,13 @@ class CGAN():
         best_wdis = 9999
         best_epoch = -1
         with tqdm.trange(epochs, disable=self.disable_tqdm) as t0:
+            from gan4hep.gan.analyze_model import save_best_epoch_info
             for epoch in t0:
 
                 # compose the training dataset by generating different noises for each epochs
                 noise = np.random.normal(loc=0., scale=1., size=(train_truth.shape[0], self.noise_dim))
                 train_inputs = np.concatenate(
                     [train_in, noise], axis=1).astype(np.float32) if train_in is not None else noise
-
 
                 dataset = tf.data.Dataset.from_tensor_slices(
                     (train_inputs, train_in, train_truth)
@@ -180,48 +196,130 @@ class CGAN():
                 avg_loss = np.sum(tot_loss, axis=0)/tot_loss.shape[0]
                 loss_dict = dict(D_loss=avg_loss[0], G_loss=avg_loss[1])
 
-                tot_wdis = evaluate_samples_fn(self.generator, epoch, testing_data, summary_writer, img_dir, **loss_dict)
+                # gen_loss_over_time.append(avg_loss[1])
+                # dis_loss_over_time.append(avg_loss[0])
+                gen_file.write(str(avg_loss[1]) + "\n")
+                disc_file.write(str(avg_loss[0]) + "\n")
+                # print("TOT_LOSS!!", tot_loss)
+                # print("AVG_LOSS!!", avg_loss)
+                # print("LOSS_DICT!!", loss_dict)
+                tot_wdis = evaluate_samples_fn(self.generator, epoch, testing_data, summary_writer, img_dir, xlabels, KE, num_input, **loss_dict)
+                # wdist_over_time.append(tot_wdis)
+                wdist_file.write(str(tot_wdis) + "\n")
                 if tot_wdis < best_wdis:
                     ckpt_manager.save()
                     self.generator.save("generator")
                     best_wdis = tot_wdis
                     best_epoch = epoch
                 t0.set_postfix(**loss_dict, BestD=best_wdis, BestE=best_epoch)
+                # lowest_wdist_over_time.append(best_wdis)
+                lowest_wdist_file.write(str(best_wdis) + ", " + str(best_epoch) + "\n")
+                if (best_epoch == epoch):
+                    save_best_epoch_info(img_dir, best_epoch, epochs, KE, num_input, self.generator, testing_data)
+                    # plot_best_to_scale(img_dir, orig_file, best_epoch, self.generator, testing_data)
         tmp_res = "Best Model in {} Epoch with a Wasserstein distance {:.4f}".format(best_epoch, best_wdis)
         logging.info(tmp_res)
         summary_logfile = os.path.join(summary_dir, 'results.txt')
         with open(summary_logfile, 'a') as f:
             f.write(tmp_res + "\n")
 
+        # return best_epoch, 
+
+
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description='Train The GAN')
-    add_arg = parser.add_argument
-    add_arg("filename", help='input filename', default=None)
-    add_arg("--epochs", help='number of maximum epochs', default=100, type=int)
-    add_arg("--log-dir", help='log directory', default='log_training')
-    add_arg("--num-test-evts", help='number of testing events', default=10000, type=int)
-    add_arg("--inference", help='perform inference only', action='store_true')
-    add_arg("-v", '--verbose', help='tf logging verbosity', default='INFO',
-        choices=['WARN', 'INFO', "ERROR", "FATAL", 'DEBUG'])
-    add_arg("--max-evts", help='Maximum number of events', type=int, default=None)
-    add_arg("--batch-size", help='Batch size', type=int, default=512)
+    import argparse                                                                                                                                                                                       
+    parser = argparse.ArgumentParser(description='Train The GAN')                                                                                                                                         
+    add_arg = parser.add_argument                                                                                                                                                                         
+    add_arg("--filename", help='input filename', default=None)                                                                                                                                              
+    add_arg("--epochs", help='number of maximum epochs', default=1000, type=int)                                                                                                                           
+    add_arg("--log-dir", help='log directory', default='log_training')                                                                                                                                    
+    add_arg("--num-test-evts", help='number of testing events', default=10000, type=int)                                                                                                                  
+    add_arg("--inference", help='perform inference only', action='store_true')                                                                                                                            
+    add_arg("-v", '--verbose', help='tf logging verbosity', default='INFO',                                                                                                                               
+            choices=['WARN', 'INFO', "ERROR", "FATAL", 'DEBUG'])
+    add_arg("--max-evts", help='Maximum number of events', type=int, default=None)                                                                                                                        
+    add_arg("--batch-size", help='Batch size', type=int, default=4096)
+    add_arg("KE", help='KE being used', default=None)
+    add_arg("--num-input", help='Number of input events (in filename)', default='1m')
     args = parser.parse_args()
 
     logging.set_verbosity(args.verbose)
 
 
-    from gan4hep.utils_gan import generate_and_save_images
-    from gan4hep.preprocess import herwig_angles
+    from gan4hep.gan.utils import generate_and_save_images
+    from gan4hep.make_input_data import convert_g4_data
+    from gan4hep.preprocess import read_geant4
+    from gan4hep.gan.analyze_model import analyze_model
+    
+    INPUT_DIR = '/global/homes/b/blianggi/290e/MCGenerators/G4/HadronicInteractions/build/'
+    input_filename = 'kaon_minus_Cu_' + str(args.KE) + '_' + str(args.num_input) + 'evts.csv'
+    file_loc = os.path.join(INPUT_DIR, input_filename)
+    print(file_loc)
 
-    train_in, train_truth, test_in, test_truth = herwig_angles(args.filename, args.max_evts)
+    # format: (X_train, X_test, y_train, y_test, xlabels)
+    train_in, test_in, train_truth, test_truth, xlabels = convert_g4_data(file_loc)
+    #train_in, test_in, train_truth, test_truth, xlabels = read_geant4(args.filename)
+    # print(train_in[:10], test_in[:10], train_truth[:10], test_truth[:10])
+
+    if args.num_input == "1m":
+        img_dir = os.path.join(args.log_dir, 'img/', '1mevts/')
+    else:
+        img_dir = os.path.join(args.log_dir, 'img/') #gives "log_training/img/" 
+    gen_file=open("{}gen_loss_data_per_{}_epochs_{}.txt".format(img_dir, args.epochs, args.KE),'w')
+    disc_file=open("{}disc_loss_data_per_{}_epochs_{}.txt".format(img_dir, args.epochs, args.KE),'w')
+    wdist_file=open("{}wdist_data_per_{}_epochs_{}.txt".format(img_dir, args.epochs, args.KE),'w')
+    lowest_wdist_file=open("{}lowest_wdist_data_per_{}_epochs_{}.txt".format(img_dir, args.epochs, args.KE),'w')
 
     batch_size = args.batch_size
+
     gan = CGAN()
     gan.train(
         train_truth, args.epochs, batch_size,
         test_truth, args.log_dir,
-        generate_and_save_images,
+        generate_and_save_images, xlabels, args.KE, args.num_input,
         train_in, test_in
     )
+
+    gen_file.close()
+    disc_file.close()
+    wdist_file.close()
+    lowest_wdist_file.close()
+
+    #plot generator and discriminator loss over time
+    analyze_model(args.log_dir, args.epochs, args.KE, args.num_input)
+
+    
+
+# if __name__ == '__main__':
+#     import argparse
+#     parser = argparse.ArgumentParser(description='Train The GAN')
+#     add_arg = parser.add_argument
+#     add_arg("filename", help='input filename', default=None)
+#     add_arg("--epochs", help='number of maximum epochs', default=100, type=int)
+#     add_arg("--log-dir", help='log directory', default='log_training')
+#     add_arg("--num-test-evts", help='number of testing events', default=10000, type=int)
+#     add_arg("--inference", help='perform inference only', action='store_true')
+#     add_arg("-v", '--verbose', help='tf logging verbosity', default='INFO',
+#         choices=['WARN', 'INFO', "ERROR", "FATAL", 'DEBUG'])
+#     add_arg("--max-evts", help='Maximum number of events', type=int, default=None)
+#     add_arg("--batch-size", help='Batch size', type=int, default=512)
+#     args = parser.parse_args()
+
+#     logging.set_verbosity(args.verbose)
+
+
+#     from gan4hep.utils_gan import generate_and_save_images
+#     from gan4hep.preprocess import herwig_angles
+
+#     train_in, train_truth, test_in, test_truth = herwig_angles(args.filename, args.max_evts)
+
+#     batch_size = args.batch_size
+#     gan = CGAN()
+#     gan.train(
+#         train_truth, args.epochs, batch_size,
+#         test_truth, args.log_dir,
+#         generate_and_save_images,
+#         train_in, test_in
+#     )
+

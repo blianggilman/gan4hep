@@ -1,0 +1,91 @@
+
+
+python cgan.py 100MeV --num-input 100k 
+
+64BY64 and 32BY32 MODEL
+NEW MAX EPOCH
+100k events
+
+100MeV: Best Model in 24 Epoch with a Wasserstein distance 0.0810
+500MeV: [31:21<00:00,  1.88s/it, Best Model in 18 Epoch with a Wasserstein distance 0.0236
+1GeV: [32:05<00:00,  1.93s/it, Best Model in 68 Epoch with a Wasserstein distance 0.0195
+10GeV: [32:17<00:00,  1.94s/it, BestD=0.00862, BestE=326, D_loss=1.38, G_loss=0.707]
+15GeV: [33:12<00:00,  1.99s/it, BestD=0.0101, BestE=102, D_loss=1.38, G_loss=0.694]
+20GeV: [34:28<00:00,  2.07s/it, BestD=0.0132, BestE=1, D_loss=1.38, G_loss=0.696]
+25GeV: 1000/1000 [34:26<00:00,  2.07s/it, BestD=0.0113, BestE=115, D_loss=1.38, G_loss=0.696]
+30GeV: 1000/1000 [23:55<00:00,  1.44s/it, BestD=0.00901, BestE=212, D_loss=1.38, G_loss=0.695]
+
+
+mixed events
+100MeV: [32:45<00:00,  1.97s/it, BestD=0.0283, BestE=67, D_loss=1.38, G_loss=0.696]
+500MeV: 1000/1000 [31:11<00:00,  1.87s/it, BestD=0.0211, BestE=123, D_loss=1.38, G_loss=0.695]
+1GeV: [30:50<00:00,  1.85s/it, BestD=0.0309, BestE=0, D_loss=1.38, G_loss=0.696]
+10GeV: [32:10<00:00,  1.93s/it, BestD=0.0399, BestE=2, D_loss=1.38, G_loss=0.696]
+15GeV: 
+20GeV:
+25GeV:
+30GeV: 
+
+1m events
+randGeV: [26:54<00:00, 16.14s/it, BestD=0.0171, BestE=11, D_loss=1.39, G_loss=0.693]
+100MeV: [26:34<00:00, 15.95s/it, BestD=0.0729, BestE=6, D_loss=1.39, G_loss=0.693]
+500MeV: [26:50<00:00, 16.10s/it, BestD=0.0563, BestE=19, D_loss=1.39, G_loss=0.694]
+1GeV: [27:32<00:00, 16.52s/it, BestD=0.0602, BestE=3, D_loss=1.39, G_loss=0.693]
+10GeV: [25:36<00:00, 15.37s/it, BestD=0.0867, BestE=4, D_loss=1.39, G_loss=0.693]
+15GeV: [26:07<00:00, 15.67s/it, BestD=0.0169, BestE=3, D_loss=1.39, G_loss=0.693]
+20GeV: [24:33<00:00, 14.74s/it, BestD=0.0319, BestE=5, D_loss=1.39, G_loss=0.693]
+25GeV: [25:27<00:00, 15.28s/it, BestD=0.0199, BestE=14, D_loss=1.39, G_loss=0.693]
+30GeV: [25:36<00:00, 15.37s/it, BestD=0.0142, BestE=13, D_loss=1.39, G_loss=0.693]
+
+
+
+---------------------------------------------------------------------------------------------------------
+100k events
+
+100MeV: 3628/24414 [1:59:07<11:22:29,  1.97s/it, BestD=0.0392, BestE=494, D_loss=1.38, G_loss=0.697]
+500MeV: 
+1GeV: 
+10GeV: 3650/24414 [2:00:06<11:23:14,  1.97s/it, BestD=0.0153, BestE=1276, D_loss=1.39, G_loss=0.694]
+15GeV: 5410/24414 [2:15:26<7:55:47,  1.50s/it, BestD=0.0499, BestE=344, D_loss=1.38, G_loss=0.694]
+**7132/24414 [3:58:14<8:49:57,  1.84s/it, BestD=0.0405, BestE=7045, D_loss=1.39, G_loss=0.694]
+20GeV:
+25GeV:
+30GeV: 4500/24414 [2:15:42<10:00:31,  1.81s/it, BestD=0.0455, BestE=2, D_loss=1.39, G_loss=0.694]
+**7282/24414 [3:58:20<9:56:48,  2.09s/it, BestD=0.147, BestE=4111, D_loss=1.39, G_loss=0.694]
+
+
+mixed events
+100MeV: 5538/24414 [2:54:05<9:53:21,  1.89s/it, BestD=0.0611, BestE=3966, D_loss=1.39, G_loss=0.694]
+500MeV: 
+1GeV: 
+10GeV: 5896/24414 [2:54:14<9:07:13,  1.77s/it, BestD=0.0439, BestE=2137, D_loss=1.39, G_loss=0.695]
+15GeV:  6424/24414 [3:21:15<9:23:35,  1.88s/it, BestD=0.061, BestE=3047, D_loss=1.39, G_loss=0.693]
+20GeV:
+25GeV:
+30GeV: 6541/24414 [3:21:26<9:10:25,  1.85s/it, BestD=0.0442, BestE=2905, D_loss=1.39, G_loss=0.694]
+
+---------------------------------------------------------------------------------------------------------
+32BY32 and 16BY16 MODEL
+100k events
+
+100MeV: 3620/24414 [1:43:56<9:57:05,  1.72s/it, BestD=0.0855, BestE=25, D_loss=1.37, G_loss=0.706]
+500MeV: 3552/24414 [1:44:01<10:10:56,  1.76s/it, BestD=0.0207, BestE=640, D_loss=1.38, G_loss=0.7]
+1GeV: 4197/24414 [1:58:30<9:30:50,  1.69s/it, BestD=0.0337, BestE=1223, D_loss=1.39, G_loss=0.697]
+10GeV: 4230/24414 [1:58:46<9:26:45,  1.68s/it, BestD=0.129, BestE=2008, D_loss=1.37, G_loss=0.709]
+15GeV: 5839/24414 [2:17:06<7:16:10,  1.41s/it, BestD=0.0609, BestE=135, D_loss=1.39, G_loss=0.696]
+20GeV: 4584/24414 [2:16:06<9:48:46,  1.78s/it, BestD=0.0773, BestE=139, D_loss=1.38, G_loss=0.699]
+25GeV: 6294/24414 [2:46:08<7:58:17,  1.58s/it, BestD=0.0774, BestE=6292, D_loss=1.38, G_loss=0.695]
+30GeV: 6336/24414 [2:46:18<7:54:29,  1.57s/it, BestD=0.034, BestE=6331, D_loss=1.38, G_loss=0.699]
+combGev: 3242/24414 [3:39:03<23:50:33,  4.05s/it, BestD=0.15, BestE=0, D_loss=1.24, G_loss=0.826]
+randGeV: 6654/24414 [3:04:19<8:11:57,  1.66s/it, BestD=0.017, BestE=25, D_loss=1.39, G_loss=0.696]
+
+mixed events
+100MeV: 2266/24414 [1:08:26<11:09:00,  1.81s/it, BestD=0.0942, BestE=102, D_loss=1.39, G_loss=0.697]
+500MeV: 4493/24414 [2:15:25<10:00:27,  1.81s/it, BestD=0.0757, BestE=1778, D_loss=1.39, G_loss=0.697]
+1GeV: 3716/24414 [1:47:24<9:58:15,  1.73s/it, BestD=0.0757, BestE=27, D_loss=1.39, G_loss=0.696]
+10GeV: 3758/24414 [1:46:59<9:48:04,  1.71s/it, BestD=0.054, BestE=15, D_loss=1.39, G_loss=0.696]
+15GeV: 2139/24414 [1:00:51<10:33:42,  1.71s/it, BestD=0.147, BestE=0, D_loss=1.39, G_loss=0.697]
+20GeV:
+25GeV:
+30GeV: 4086/24414 [1:56:27<9:39:21,  1.71s/it, BestD=0.154, BestE=1783, D_loss=1.39, G_loss=0.696]
+

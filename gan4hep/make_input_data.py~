@@ -1,0 +1,46 @@
+
+
+import pandas as pd
+import numpy as np
+from gan4hep.preprocess import shuffle
+
+def convert_g4_data():
+    filename = '/global/homes/b/blianggi/290e/MCGenerators/G4/HadronicInteractions/build/kaon_minus_Cu_30GeV.csv'
+
+    data = None
+    Nsec = []
+    with open(filename, 'r') as f:
+        for line in f:
+            data = line                                                                                                                                                                      
+            items = data.split()                                                                                                                                                      
+            n_particles = (len(items) // 5) - 1 #disregarding the primary particle (first 5 columns)
+            Nsec.append(n_particles)
+
+        
+        N = 400
+        df = pd.read_csv(filename, header=None, sep=' ', usecols=[1,2,3,4])
+        df.insert(4, "5", Nsec, True)
+        print(df.shape)
+
+        #df = pd.read_csv(filename, header=None, sep=' ', names = list(range(0,N)))
+        #shuffle(df) #doesn't work
+        
+        print(df)
+
+        data = df.to_numpy().astype(np.float32)
+        print(data.shape)
+        training_size = int(data.shape[0]*0.8)
+
+        X_train, X_test = data[:training_size, :-1], data[training_size:, :-1]
+        y_train, y_test = data[:training_size, -1], data[training_size:, -1]
+        
+        y_train = y_train[..., None]
+        y_test = y_test[..., None]
+
+        xlabels = ['num_secondary']
+        print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
+
+        return (X_train, X_test, y_train, y_test, xlabels)
+
+
+#convert_g4_data()

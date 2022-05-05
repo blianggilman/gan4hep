@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 from gan4hep.utils_plot import compare
+# from gan4hep.utils_plot import plot_loss
 
 
 def import_model(gan_name):
@@ -198,7 +199,7 @@ def evaluate(model, datasets):
     return predictions, truths
 
 
-def generate_and_save_images(model, epoch, datasets, summary_writer, img_dir, xlabels, **kwargs) -> float:
+def generate_and_save_images(model, epoch, datasets, summary_writer, img_dir, xlabels, KE, num_input, **kwargs) -> float:
     # Notice `training` is set to False.
     # This is so all layers run in inference mode (batchnorm).
     predictions = []
@@ -211,8 +212,13 @@ def generate_and_save_images(model, epoch, datasets, summary_writer, img_dir, xl
     predictions = tf.concat(predictions, axis=0).numpy()
     truths = tf.concat(truths, axis=0).numpy()
 
-    outname = os.path.join(img_dir, str(epoch))
+    if num_input == "1m":
+        outname = os.path.join(img_dir, '1mevts/{}/'.format(KE), str(epoch))
+    else:
+        outname = os.path.join(img_dir, '{}/'.format(KE), str(epoch)) #add '{}GeV/'.format(KE) (and add KE param at the top)
     compare(predictions, truths, outname, xlabels)
+    # outname_loss = os.path.join(img_dir, str(epoch), "_loss")
+    # plot_loss(outname_loss, epoch, **kwargs)
 
     if summary_writer:
         return log_metrics(summary_writer, predictions, truths, epoch, **kwargs)[0]

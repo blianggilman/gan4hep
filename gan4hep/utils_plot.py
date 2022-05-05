@@ -37,7 +37,7 @@ def view_particle_4vec(particles, axs=None, labels=None, outname=None, **kwargs)
 
     if axs is None or len(axs) != 4:
         fig, axs = plt.subplots(2,2, figsize=(10,10))
-        axs = axs.flatten()
+        #axs = axs.flatten()
     
     for idx in range(4):
         array2hist(particles[:, idx], axs[idx], **kwargs)
@@ -68,6 +68,7 @@ def compare(predictions, truths, outname, xlabels,
     # """
 
     num_variables = predictions.shape[1]
+    print("num_vars", num_variables, predictions.shape)
     if xranges is not None:
         assert len(xranges) == num_variables,\
             "# of x-axis ranges must equal to # of variables"
@@ -88,20 +89,70 @@ def compare(predictions, truths, outname, xlabels,
 
     _, axs = plt.subplots(nrows, ncols,
         figsize=(4*ncols, 4*nrows), constrained_layout=True)
-    axs = axs.flatten()
-
+    #axs = axs.flatten()
+    axs = [axs]
+    
     config = dict(histtype='step', lw=2, density=True)
     for idx in range(num_variables):
         xrange = xranges[idx] if xranges else (-1, 1)
         xbin = xbins[idx] if xbins else 40
 
         ax = axs[idx]
+
+        # from gan4hep.gan.analyze_model import inverse_transform
+        y_truth = [] # if needed, read using file from before
+
+        print('truths for plotting: ', truths[:, idx])
+        print('predictions for plotting:', predictions[:, idx])
+        yvals, _, _ = ax.hist(truths[:, idx], bins=xbin, label='Truth', **config)
+        # yvals, _, _ = ax.hist(inverse_transform(truths[:, idx], orig_file), bins=np.linspace(0, 100, 100), label='Truth', **config)
+        # yvals, _, _ = ax.hist(y_truth, bins=np.linspace(0, 100, 100), label='Truth', **config)
+        max_y = np.max(yvals) * 1.1
+        print("MAX_y", max_y)
+        ax.hist(predictions[:, idx], bins=xbin, label='Generator', **config)
+        # ax.hist(inverse_transform(predictions[:, idx], orig_file), bins=np.linspace(0,100,100), label='Generator', **config)
+        ax.set_xlabel(r"{}".format(xlabels[idx]))
+        ax.set_ylim(0, max_y)
+        ax.legend()
+        '''
         yvals, _, _ = ax.hist(truths[:, idx], bins=xbin, range=xrange, label='Truth', **config)
         max_y = np.max(yvals) * 1.1
         ax.hist(predictions[:, idx], bins=xbin, range=xrange, label='Generator', **config)
         ax.set_xlabel(r"{}".format(xlabels[idx]))
+        
         ax.set_ylim(0, max_y)
         ax.legend()
+        '''
 
+        
     plt.savefig(outname)
     plt.close('all')
+
+
+# def plot_loss(outname_loss, epoch, **kwargs):
+
+#     _, axs = plt.subplots(nrows, ncols,
+#         figsize=(4*ncols, 4*nrows), constrained_layout=True)
+#     #axs = axs.flatten()
+#     axs = [axs]
+    
+#     config = dict(histtype='step', lw=2, density=True)
+#     for idx in range(num_variables):
+#         xrange = xranges[idx] if xranges else (-1, 1)
+#         xbin = xbins[idx] if xbins else 40
+
+#         ax = axs[idx]
+
+#         # print('truths for plotting: ', truths[:, idx])
+#         # print('predictions for plotting:', predictions[:, idx])
+#         yvals, _, _ = ax.hist(truths[:, idx], bins=np.linspace(-1, 1, 50), label='Truth', **config)
+#         max_y = np.max(yvals) * 1.1
+#         print("MAX_y", max_y)
+#         # ax.hist(predictions[:, idx], bins=xbin, label='Generator', **config)
+#         ax.hist(predictions[:, idx], bins=np.linspace(-1,1,50), label='Generator', **config)
+#         ax.set_xlabel(r"{}".format(xlabels[idx]))
+#         ax.set_ylim(0, max_y)
+#         ax.legend()
+        
+#     plt.savefig(outname_loss)
+#     plt.close('all')

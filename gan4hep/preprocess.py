@@ -25,6 +25,28 @@ def read_dataframe(filename, sep=",", engine=None):
                     header=None, names=None, engine=engine)
     return df
    
+def read_geant4(filename, sep=" ", engine=None):
+    #filename = "/global/homes/b/blianggi/290e/MCGenerators/G4/HadronicInteractions/build/" + filename
+    df = pd.read_csv(filename, sep=sep, usecols=(1,2,3,4,5)) # 4 vector and num_secondary
+    # df = pd.read_csv(filename, sep=sep)
+    print(df.head())
+
+    data = df.to_numpy().astype(np.float32)
+    print(data.shape)
+    training_size = int(data.shape[0]*0.8)
+
+    X_train, X_test = data[:training_size, :-1], data[training_size:, :-1]
+    y_train, y_test = data[:training_size, -1], data[training_size:, -1]
+
+    y_train = y_train[..., None]
+    y_test = y_test[..., None]
+
+    xlabels = ['num_secondary']
+    print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
+
+    return (X_train, X_test, y_train, y_test, xlabels)
+    
+
 def herwig_angles(filename,
         max_evts=None, testing_frac=0.1):
     """
